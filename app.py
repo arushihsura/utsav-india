@@ -26,10 +26,10 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
 
+    app.teardown_appcontext(close_db)
+
     with app.app_context():
         init_db()
-
-    app.teardown_appcontext(close_db)
 
     @app.get("/")
     def home():
