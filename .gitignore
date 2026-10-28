@@ -1,0 +1,13 @@
+.env
+*.db
+*.sqlite
+*.sqlite3
+utsav_india.db
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+instance/
+venv/
+.venv/

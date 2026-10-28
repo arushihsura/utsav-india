@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Utsav India — Indian Festival & Weather Planner</title>
+    <meta
+      name="description"
+      content="A full-stack cultural travel and celebration planner combining the Indian Festival API and Open-Meteo weather forecasts."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
+  <body>
+    <div class="app-layout">
+      <!-- SIDEBAR NAVIGATION -->
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="brand-symbol">🪔</div>
+          <div class="brand-text">
+            <span class="brand-title">Utsav India</span>
+            <span class="brand-subtitle">Festival & Weather Planner</span>
+          </div>
+        </div>
+
+        <nav class="nav-menu" aria-label="Main Navigation">
+          <button data-section="overview" class="nav-item active" id="nav-overview">
+            <span class="nav-icon">✨</span>
+            <span class="nav-label">Overview</span>
+          </button>
+          <button data-section="explore" class="nav-item" id="nav-explore">
+            <span class="nav-icon">🏮</span>
+            <span class="nav-label">Explore Festivals</span>
+          </button>
+          <button data-section="planner" class="nav-item" id="nav-planner">
+            <span class="nav-icon">🌤️</span>
+            <span class="nav-label">Festival Planner</span>
+            <span class="nav-badge">Mashup</span>
+          </button>
+          <button data-section="weather" class="nav-item" id="nav-weather">
+            <span class="nav-icon">🌦️</span>
+            <span class="nav-label">Weather Forecast</span>
+          </button>
+          <button data-section="saved" class="nav-item" id="nav-saved">
+            <span class="nav-icon">⭐</span>
+            <span class="nav-label">My Saved Festivals</span>
+            <span class="count-pill" id="saved-badge">0</span>
+          </button>
+          <button data-section="plans" class="nav-item" id="nav-plans">
+            <span class="nav-icon">📅</span>
+            <span class="nav-label">My Plans</span>
+            <span class="count-pill" id="plans-badge">0</span>
+          </button>
+          <button data-section="api-explorer" class="nav-item" id="nav-api-explorer">
+            <span class="nav-icon">⚡</span>
+            <span class="nav-label">API Explorer</span>
+            <span class="nav-badge lab-badge">Lab</span>
+          </button>
+          <button data-section="profile" class="nav-item" id="nav-profile">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Profile & Auth</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <p class="sidebar-note">Utsav India v1.0 • College Lab Project</p>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT WRAPPER -->
+      <div class="main-wrapper">
+        <!-- TOPBAR -->
+        <header class="topbar">
+          <div class="topbar-left">
+            <button id="sidebar-toggle" class="mobile-toggle-btn" aria-label="Toggle menu">☰</button>
+            <div class="breadcrumbs">
+              <span id="current-section-title">Overview</span>
+            </div>
+          </div>
+          <div class="topbar-right">
+            <div id="user-pill" class="user-pill guest">
+              <div class="avatar" id="user-avatar">👤</div>
+              <div class="user-details">
+                <span class="user-name" id="user-display-name">Guest User</span>
+                <span class="user-sub" id="user-display-status">Sign in with Google</span>
+              </div>
+            </div>
+            <div id="google-auth-container" class="google-auth-box"></div>
+          </div>
+        </header>
+
+        <!-- MAIN VIEW SECTIONS -->
+        <main class="content-container">
+          <!-- 1. OVERVIEW / DASHBOARD -->
+          <section id="section-overview" class="view-section active">
+            <div class="hero-card">
+              <div class="hero-overlay">
+                <div class="hero-content">
+                  <span class="hero-tag">Cultural Heritage & Weather Mashup</span>
+                  <h1 class="hero-title" id="greeting-text">Namaste! Celebrate India's Vibrant Traditions</h1>
+                  <p class="hero-desc">
+                    Plan your festive celebrations with real-time Open-Meteo forecasts combined with authentic Indian cultural festival schedules.
+                  </p>
+                  <div class="hero-actions">
+                    <button class="btn btn-primary" onclick="setActiveSection('planner')">Plan a Celebration 🌤️</button>
+                    <button class="btn btn-secondary" onclick="setActiveSection('explore')">Explore Festivals 🏮</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-header">
+              <h2>Dashboard & Real-Time Insights</h2>
+              <p class="section-subtitle">Live metrics calculated directly from database records and external API feeds.</p>
+            </div>
+
+            <div id="dashboard-cards" class="dashboard-grid">
+              <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading live dashboard data...</p>
+              </div>
+            </div>
+
+            <div class="dashboard-panels-grid">
+              <div class="card panel-card">
+                <div class="panel-header">
+                  <h3>Upcoming Personal Plans</h3>
+                  <button class="btn btn-sm btn-ghost" onclick="setActiveSection('plans')">View All</button>
+                </div>
+                <div id="dashboard-plans-preview" class="panel-body">
+                  <p class="muted">Loading plans...</p>
+                </div>
+              </div>
+
+              <div class="card panel-card">
+                <div class="panel-header">
+                  <h3>Preferred City Weather</h3>
+                  <button class="btn btn-sm btn-ghost" onclick="setActiveSection('weather')">Full Forecast</button>
+                </div>
+                <div id="dashboard-weather-preview" class="panel-body">
+                  <p class="muted">Loading local weather...</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. EXPLORE FESTIVALS -->
+          <section id="section-explore" class="view-section">
+            <div class="section-header">
+              <h2>Indian Festival Explorer</h2>
+              <p class="section-subtitle">
+                Browse official Indian festivals from the live Indian Festival API. Filter by month, religion, state, or holiday category.
+              </p>
+            </div>
+
+            <div class="toolbar card">
+              <div class="search-group">
+                <span class="search-icon">🔍</span>
+                <input id="festival-search" type="text" placeholder="Search festival name (e.g. Diwali, Eid, Pongal)..." />
+              </div>
+              <div class="filter-group">
+                <select id="festival-month" aria-label="Month">
+                  <option value="">All Months</option>
+                  <option value="1">January</option>
+                  <option value="2">February</option>
+                  <option value="3">March</option>
+                  <option value="4">April</option>
+                  <option value="5">May</option>
+                  <option value="6">June</option>
+                  <option value="7">July</option>
+                  <option value="8">August</option>
+                  <option value="9">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
+                </select>
+                <select id="festival-religion" aria-label="Religion">
+                  <option value="">All Religions</option>
+                  <option value="hindu">Hindu</option>
+                  <option value="muslim">Muslim</option>
+                  <option value="sikh">Sikh</option>
+                  <option value="christian">Christian</option>
+                  <option value="jain">Jain</option>
+                  <option value="buddhist">Buddhist</option>
+                </select>
+                <input id="festival-state" type="text" placeholder="State (e.g. Maharashtra)" />
+                <label class="checkbox-label">
+                  <input id="festival-national-holiday" type="checkbox" />
+                  <span>National Holiday</span>
+                </label>
+                <button id="festival-search-btn" class="btn btn-primary">Filter</button>
+                <button id="festival-reset-btn" class="btn btn-secondary">Reset</button>
+              </div>
+            </div>
+
+            <div class="api-notice-bar">
+              <span>ℹ️ Festival dates may vary by regional tradition, lunar calendars, and source accuracy. Source: Indian Festival API.</span>
+            </div>
+
+            <div id="festival-list" class="cards-grid">
+              <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading festivals from Indian Festival API...</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3. FESTIVAL PLANNER (MANDATORY MASHUP) -->
+          <section id="section-planner" class="view-section">
+            <div class="section-header">
+              <h2>Festival & Weather Planner (Web Mashup)</h2>
+              <p class="section-subtitle">
+                Combines festival metadata with 7-day Open-Meteo forecasts to generate rule-based outdoor vs indoor celebration suggestions.
+              </p>
+            </div>
+
+            <div class="card mashup-control-card">
+              <div class="planner-form-grid">
+                <div class="form-field">
+                  <label for="planner-festival-select">1. Select Festival</label>
+                  <select id="planner-festival-select">
+                    <option value="">Choose a festival...</option>
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label for="planner-city">2. Select Destination City</label>
+                  <select id="planner-city"></select>
+                </div>
+
+                <div class="form-field">
+                  <label for="planner-date">3. Celebration Date</label>
+                  <input id="planner-date" type="date" />
+                  <div class="date-quick-actions">
+                    <button type="button" class="btn-chip" id="planner-use-festival-date">Use Festival Date</button>
+                    <button type="button" class="btn-chip" id="planner-use-today">Today</button>
+                  </div>
+                </div>
+
+                <div class="form-field align-end">
+                  <button id="planner-run-btn" class="btn btn-primary btn-block">Generate Mashup Plan 🌤️</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="planner-result-container" class="mashup-result-area">
+              <div class="empty-state card">
+                <div class="empty-icon">🏮 🌤️</div>
+                <h3>Select a festival and city to generate your mashup plan</h3>
+                <p class="muted">The system will query both APIs in parallel, correlate the celebration date with weather parameters, and produce an intelligent forecast recommendation.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4. WEATHER FORECAST -->
+          <section id="section-weather" class="view-section">
+            <div class="section-header">
+              <h2>Open-Meteo 7-Day Weather Forecast</h2>
+              <p class="section-subtitle">
+                Live meteorology data for Indian metropolitan centers with precipitation probability, high/low temperatures, and sky condition codes.
+              </p>
+            </div>
+
+            <div class="toolbar card">
+              <div class="form-inline">
+                <label for="weather-city">Select City:</label>
+                <select id="weather-city"></select>
+                <button id="weather-load-btn" class="btn btn-primary">Fetch Forecast</button>
+              </div>
+            </div>
+
+            <div id="weather-result" class="weather-display-area">
+              <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading weather forecast...</p>
+              </div>
+            </div>
+
+            <p class="attribution muted">
+              Weather data powered by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo Weather API</a>. Coordinates mapped for high-accuracy local forecasts.
+            </p>
+          </section>
+
+          <!-- 5. MY SAVED FESTIVALS -->
+          <section id="section-saved" class="view-section">
+            <div class="section-header">
+              <h2>My Saved Festivals</h2>
+              <p class="section-subtitle">Personal bookmarks saved to SQLite database. Protected by JWT authentication and user ownership checks.</p>
+            </div>
+
+            <div id="saved-list" class="cards-grid">
+              <div class="empty-state card">
+                <div class="empty-icon">⭐</div>
+                <h3>No saved festivals yet</h3>
+                <p class="muted">Browse the Festival Explorer and click "Save" on any festival to bookmark it here.</p>
+                <button class="btn btn-primary" onclick="setActiveSection('explore')">Explore Festivals</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 6. MY PLANS -->
+          <section id="section-plans" class="view-section">
+            <div class="section-header">
+              <h2>My Celebration Plans</h2>
+              <p class="section-subtitle">
+                Create, view, modify (PUT/PATCH), and delete your personal celebration itineraries. Stored in SQLite with user ownership validation.
+              </p>
+            </div>
+
+            <!-- Create Plan Form Card -->
+            <div class="card form-card">
+              <h3>Create New Celebration Plan</h3>
+              <div class="plan-form-grid">
+                <div class="form-field">
+                  <label for="plan-festival-select">Festival</label>
+                  <select id="plan-festival-select">
+                    <option value="">Select a festival...</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label for="plan-city">Destination City</label>
+                  <select id="plan-city"></select>
+                </div>
+                <div class="form-field">
+                  <label for="plan-date">Celebration Date</label>
+                  <input id="plan-date" type="date" required />
+                </div>
+                <div class="form-field span-full">
+                  <label for="plan-notes">Personal Notes & Arrangements</label>
+                  <input id="plan-notes" type="text" placeholder="e.g. Family gathering, booking sweets from Chandni Chowk, traditional dress" />
+                </div>
+                <div class="form-field span-full text-right">
+                  <button id="plan-create-btn" class="btn btn-primary">Save Celebration Plan</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-subheader">
+              <h3>Your Scheduled Plans</h3>
+            </div>
+            <div id="plans-list" class="cards-grid">
+              <div class="empty-state card">
+                <div class="empty-icon">📅</div>
+                <h3>No celebration plans scheduled</h3>
+                <p class="muted">Fill out the form above or use the Festival Planner mashup to schedule your festive celebrations.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- 7. API EXPLORER (FOR LAB DEMOS) -->
+          <section id="section-api-explorer" class="view-section">
+            <div class="section-header">
+              <h2>Interactive REST API Explorer</h2>
+              <p class="section-subtitle">
+                Lab demonstration console to test all HTTP methods (GET, POST, PUT, PATCH, DELETE), inspect actual HTTP status codes, measure server latency, and verify JWT authorization boundaries.
+              </p>
+            </div>
+
+            <div class="card api-console-card">
+              <div class="api-preset-bar">
+                <label for="api-preset-select"><strong>Lab Scenarios & Presets:</strong></label>
+                <select id="api-preset-select">
+                  <option value="">-- Choose a Preset Request --</option>
+                  <option value="get_festivals">GET /api/festivals (All Festivals)</option>
+                  <option value="get_festivals_upcoming">GET /api/festivals?upcoming=true (Upcoming)</option>
+                  <option value="get_festival_id">GET /api/festivals/1 (Festival by ID)</option>
+                  <option value="get_weather">GET /api/weather?city=Mumbai (Open-Meteo Weather)</option>
+                  <option value="get_mashup">GET /api/mashup/festival-plan (Mashup Plan)</option>
+                  <option value="get_me">GET /api/me (Current User Profile - Protected)</option>
+                  <option value="patch_me">PATCH /api/me (Update Preferred City - Protected)</option>
+                  <option value="get_saved">GET /api/saved-festivals (List Saved Festivals - Protected)</option>
+                  <option value="post_saved">POST /api/saved-festivals (Save Festival - Protected)</option>
+                  <option value="get_plans">GET /api/plans (List Plans - Protected)</option>
+                  <option value="post_plans">POST /api/plans (Create Plan - Protected)</option>
+                  <option value="put_plan">PUT /api/plans/1 (Full Replace Plan - Protected)</option>
+                  <option value="patch_plan">PATCH /api/plans/1 (Partial Update Plan - Protected)</option>
+                  <option value="delete_plan">DELETE /api/plans/1 (Delete Plan - Protected)</option>
+                  <option value="get_stats">GET /api/dashboard/stats (Dashboard Stats - Protected)</option>
+                  <option value="unauthorized_test">GET /api/plans (Unauthorized Test - No Token -> 401)</option>
+                </select>
+              </div>
+
+              <div class="api-request-bar">
+                <select id="api-method" class="method-select">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="PATCH">PATCH</option>
+                  <option value="DELETE">DELETE</option>
+                </select>
+                <input id="api-endpoint" type="text" value="/api/festivals" class="endpoint-input" />
+                <button id="api-run-btn" class="btn btn-primary">Execute Request 🚀</button>
+              </div>
+
+              <div class="api-options-bar">
+                <label class="checkbox-label">
+                  <input id="api-send-token" type="checkbox" checked />
+                  <span>Include App JWT in <code>Authorization: Bearer</code> header</span>
+                </label>
+              </div>
+
+              <div class="api-body-group">
+                <label for="api-body">JSON Request Payload (for POST, PUT, PATCH):</label>
+                <textarea id="api-body" rows="5" placeholder='{"festival_id": 1, "city": "Mumbai", "celebration_date": "2026-11-08", "notes": "Sweet boxes ready"}'></textarea>
+              </div>
+
+              <div class="api-response-wrapper">
+                <div class="api-response-header">
+                  <span>HTTP Response</span>
+                  <div class="response-meta">
+                    <span id="api-status-badge" class="badge">Awaiting execution</span>
+                    <span id="api-latency-badge" class="badge badge-subtle">- ms</span>
+                  </div>
+                </div>
+                <pre id="api-output" class="api-code-view">// Response output will appear here formatted with headers and payload...</pre>
+              </div>
+            </div>
+          </section>
+
+          <!-- 8. PROFILE & AUTHENTICATION -->
+          <section id="section-profile" class="view-section">
+            <div class="section-header">
+              <h2>User Profile & Authentication Status</h2>
+              <p class="section-subtitle">Demonstrates Google Identity Services (OpenID Connect ID Token) and Application-Specific PyJWT session issuance.</p>
+            </div>
+
+            <div class="profile-grid">
+              <div class="card profile-card">
+                <div class="profile-header">
+                  <div class="profile-avatar" id="profile-avatar-big">👤</div>
+                  <div>
+                    <h3 id="profile-name">Guest User</h3>
+                    <p class="muted" id="profile-email">Not signed in</p>
+                  </div>
+                </div>
+
+                <div class="profile-details-list">
+                  <div class="detail-row">
+                    <span class="detail-label">Authentication Method:</span>
+                    <span class="detail-val" id="profile-auth-type">None</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Session Token Type:</span>
+                    <span class="detail-val">PyJWT (HS256)</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Preferred City:</span>
+                    <span class="detail-val" id="profile-preferred-city-val">Not set</span>
+                  </div>
+                </div>
+
+                <div class="profile-pref-form">
+                  <label for="preferred-city"><strong>Change Preferred City:</strong></label>
+                  <div class="form-inline">
+                    <select id="preferred-city"></select>
+                    <button id="save-preference-btn" class="btn btn-secondary">Update Preference</button>
+                  </div>
+                </div>
+
+                <div class="profile-actions">
+                  <button id="logout-btn" class="btn btn-danger">Log Out</button>
+                </div>
+              </div>
+
+              <div class="card auth-architecture-card">
+                <h3>Google OAuth & Token Architecture</h3>
+                <p>
+                  This project separates <strong>Identity Verification</strong> from <strong>Application Authorization</strong>:
+                </p>
+                <ol class="auth-steps">
+                  <li><strong>Google Identity Services:</strong> The client authenticates with Google OpenID Connect, receiving a signed Google ID token.</li>
+                  <li><strong>Backend Token Verification:</strong> Flask verifies the signature, issuer (<code>accounts.google.com</code>), and audience using <code>google-auth</code>.</li>
+                  <li><strong>Application JWT:</strong> Flask issues an independent <code>HS256</code> JWT containing the SQLite user ID and expiry time.</li>
+                  <li><strong>Authorization:</strong> Protected endpoints validate the application JWT via the <code>@require_auth</code> decorator.</li>
+                </ol>
+
+                <div class="oauth-config-box" id="oauth-config-box">
+                  <span class="config-status-badge" id="oauth-status-badge">Checking Google OAuth configuration...</span>
+                  <p class="small muted" id="oauth-status-desc"></p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <!-- MODAL: FESTIVAL DETAILS -->
+    <div id="festival-detail-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="modal-festival-name">Festival Details</h2>
+          <button class="modal-close-btn" id="modal-close-btn" aria-label="Close dialog">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-festival-body">
+          <div class="loading-state"><div class="spinner"></div></div>
+        </div>
+        <div class="modal-footer" id="modal-festival-footer">
+          <button class="btn btn-secondary" id="modal-close-action">Close</button>
+          <button class="btn btn-secondary" id="modal-save-action">⭐ Save Festival</button>
+          <button class="btn btn-primary" id="modal-plan-action">🌤️ Plan with Weather</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: EDIT PLAN (PUT/PATCH) -->
+    <div id="plan-edit-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>Edit Celebration Plan</h2>
+          <button class="modal-close-btn" id="plan-edit-close-btn" aria-label="Close dialog">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="edit-plan-id" />
+          <div class="form-group">
+            <label><strong>Festival:</strong></label>
+            <p id="edit-plan-festival-name" class="modal-readonly-text"></p>
+          </div>
+          <div class="form-group">
+            <label for="edit-plan-city">Destination City:</label>
+            <select id="edit-plan-city"></select>
+          </div>
+          <div class="form-group">
+            <label for="edit-plan-date">Celebration Date:</label>
+            <input id="edit-plan-date" type="date" required />
+          </div>
+          <div class="form-group">
+            <label for="edit-plan-notes">Notes & Arrangements:</label>
+            <textarea id="edit-plan-notes" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" id="plan-edit-cancel-btn">Cancel</button>
+          <button class="btn btn-primary" id="plan-edit-save-btn">Save Changes (PUT/PATCH)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
